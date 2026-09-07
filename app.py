@@ -102,7 +102,12 @@ def join():
             return render_template("home.html", error="Incorrect password.")
         session[f"room_{room_id}"] = room_data["password"]
     return redirect(url_for("room", room_id=room_id))
-
+@app.route("/google0daa7c89e697c535.html")
+def google_verification():
+    return send_from_directory(
+        BASE,
+        "google0daa7c89e697c535.html"
+    )
 @app.route("/room/<room_id>", methods=["GET", "POST"])
 def room(room_id):
     room_id = room_id.upper()
