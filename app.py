@@ -65,6 +65,36 @@ def create():
                 (rid, password, time.time(), time.time()+hours*3600))
     con.commit(); con.close()
     return redirect(url_for("room", room_id=rid))
+    @app.post("/join")
+def join():
+    room_id = request.form.get("room_id", "").strip().upper()
+    password = request.form.get("password", "").strip()
+
+    con = db()
+    room = con.execute(
+        "SELECT * FROM rooms WHERE id=?",
+        (room_id,)
+    ).fetchone()
+    con.close()
+
+    if not room:
+        return render_template(
+            "home.html",
+            error="Room not found. Please check the Room ID."
+        )
+
+    # Check password if room is protected
+    if room["password"]:
+        if password != room["password"]:
+            return render_template(
+                "home.html",
+                error="Incorrect password."
+            )
+
+        # Save access in session
+        session[f"room_{room_id}"] = room["password"]
+
+    return redirect(url_for("room", room_id=room_id))
 
 @app.route("/room/<room_id>", methods=["GET","POST"])
 def room(room_id):
