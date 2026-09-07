@@ -19,7 +19,7 @@ url_for
 from werkzeug.utils import secure_filename
 import qrcode
 
-BASE = Path(**file**).resolve().parent
+BASE = Path(__file__).resolve().parent
 UPLOADS = BASE / "uploads"
 STATIC = BASE / "static"
 UPLOADS.mkdir(exist_ok=True)
@@ -27,7 +27,7 @@ STATIC.mkdir(exist_ok=True)
 
 DB = BASE / "qrshare.db"
 
-app = Flask(**name**)
+app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
 # Maximum upload size: 1 GB
