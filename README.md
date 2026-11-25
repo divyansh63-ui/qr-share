@@ -1,15 +1,38 @@
-# QR Share Public
+# QuickDrop
 
-## Local run
+QuickDrop is a lightweight web application for sharing files between phones and computers using a QR code, a shareable link, or a Room ID.
+
+## Sharing options
+- **QR code:** Scan the room QR code with another device's camera.
+- **Link:** Copy the direct room URL or use the device's native Share menu.
+- **Room ID:** Copy the ID and enter it in the Join with Room ID section on the homepage.
+- **Optional password:** Rooms can be protected with a password.
+- **Expiry:** Choose a room lifetime from 1 hour up to 7 days.
+
+## Technology
+- Python and Flask — backend and routes
+- HTML, CSS, JavaScript — user interface and browser interactions
+- SQLite — room and file metadata
+- `qrcode` — QR code generation
+- Gunicorn — production WSGI server
+- Render — hosting platform
+
+## Run locally
+```bash
 pip install -r requirements.txt
 python app.py
+```
+Open `http://127.0.0.1:5000`.
 
 ## Deploy to Render
-1. Create a GitHub repository and upload these files.
-2. On Render, create a new Web Service and connect the repository.
+1. Push this project to GitHub.
+2. Create a Render Web Service connected to the repository.
 3. Build command: `pip install -r requirements.txt`
 4. Start command: `gunicorn app:app`
-5. Add environment variable `SECRET_KEY` with a long random value.
+5. Set a long random `SECRET_KEY` environment variable.
 
-## Important production note
-This starter stores uploads and SQLite data on the server filesystem. On many cloud hosts, local storage is ephemeral. For a serious public service, use persistent object storage (Cloudflare R2/S3) and a managed database.
+## Storage note
+This project stores uploaded files and SQLite data on the server filesystem. On cloud hosts, local storage may be ephemeral. For durable production storage, configure a persistent disk or object storage and a managed database.
+
+## Security note
+Password-protected rooms require the room password for room access, file listing, uploads, downloads, and deletion. Use HTTPS in deployment. This is a starter project, not an end-to-end encrypted storage service.

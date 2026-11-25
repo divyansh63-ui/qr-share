@@ -61,6 +61,13 @@ def clean_expired():
     con.commit()
     con.close()
 
+def room_access_allowed(room_data):
+    """Return whether the current session has access to this room."""
+    if not room_data:
+        return False
+    password = room_data["password"]
+    return not password or session.get(f"room_{room_data['id']}") == password
+
 def generate_room_id():
     return secrets.token_urlsafe(6).replace("-", "").replace("_", "")[:8].upper()
 
@@ -80,8 +87,10 @@ def create():
     except ValueError:
         hours = 24
     hours = min(max(hours, 1), 168)
-    room_id = generate_room_id()
     con = db()
+    room_id = generate_room_id()
+    while con.execute("SELECT 1 FROM rooms WHERE id=?", (room_id,)).fetchone():
+        room_id = generate_room_id()
     con.execute("INSERT INTO rooms VALUES (?, ?, ?, ?)",
                 (room_id, password, time.time(), time.time() + hours * 3600))
     con.commit()
@@ -123,7 +132,10 @@ def room(room_id):
                 session[session_key] = room_data["password"]
                 return redirect(url_for("room", room_id=room_id))
             return render_template("password.html", room_id=room_id)
-    share_url = request.url
+    # Build the public room URL from the incoming host and forwarded scheme
+    # (Render terminates HTTPS at its proxy).
+    scheme = request.headers.get("X-Forwarded-Proto", request.scheme).split(",")[0].strip()
+    share_url = f"{scheme}://{request.host}/room/{room_id}"
     qr = qrcode.make(share_url)
     qr_filename = f"qr_{room_id}.png"
     qr.save(STATIC / qr_filename)
@@ -135,6 +147,13 @@ def room(room_id):
 def list_files(room_id):
     room_id = room_id.upper()
     con = db()
+    room_data = con.execute("SELECT * FROM rooms WHERE id=?", (room_id,)).fetchone()
+    if not room_data:
+        con.close()
+        abort(404)
+    if not room_access_allowed(room_data):
+        con.close()
+        abort(403)
     rows = con.execute("""SELECT id, original_name, size, created FROM files
                           WHERE room_id=? ORDER BY id DESC""", (room_id,)).fetchall()
     con.close()
@@ -175,6 +194,13 @@ def download(file_id):
     con.close()
     if not file_data:
         abort(404)
+    con = db()
+    room_data = con.execute("SELECT * FROM rooms WHERE id=?", (file_data["room_id"],)).fetchone()
+    con.close()
+    if not room_data:
+        abort(404)
+    if not room_access_allowed(room_data):
+        abort(403)
     return send_from_directory(UPLOADS, file_data["stored_name"],
                                as_attachment=True,
                                download_name=file_data["original_name"])
@@ -188,7 +214,10 @@ def delete(file_id):
         abort(404)
     room_data = con.execute("SELECT * FROM rooms WHERE id=?",
                             (file_data["room_id"],)).fetchone()
-    if room_data["password"] and session.get(f"room_{room_data['id']}") != room_data["password"]:
+    if not room_data:
+        con.close()
+        abort(404)
+    if not room_access_allowed(room_data):
         con.close()
         abort(403)
     path = UPLOADS / file_data["stored_name"]
