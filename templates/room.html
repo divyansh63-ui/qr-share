@@ -1,1 +1,61 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Room {{room_id}} • QR Share</title><link rel="stylesheet" href="/static/style.css"></head><body><main><header><a href="/" class="brand">⚡ QR Share</a><span class="expiry">Expires: {{expires}}</span></header><section class="roomhead"><div><h1>Room {{room_id}}</h1><p>Share this link with friends anywhere.</p></div><div class="qr"><img src="/static/qr_{{room_id}}.png"><small>Scan to join</small></div></section><section class="card share"><input id="link" value="{{share_url}}" readonly><button onclick="copyLink()">Copy link</button></section><section class="grid"><div class="card"><h2>Upload files</h2><div id="dropzone"><b>📁 Drop files here</b><span>or</span><button onclick="picker.click()" type="button">Choose files</button><input id="picker" type="file" multiple hidden></div><div id="prog" class="hidden"><div class="progress"><i id="bar"></i></div><span id="pt"></span></div></div><div class="card"><h2>Files in room</h2><div id="files"></div></div></section><footer>⚡ QR Share • Files are automatically removed after expiry</footer></main><script>const ROOM="{{room_id}}";</script><script src="/static/script.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <title>Room {{ room_id }} • QuickDrop</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+  <header>
+    <a href="/" class="brand">⚡ QuickDrop</a>
+    <span class="expiry">Expires: {{ expires }}</span>
+  </header>
+
+  <section class="roomhead">
+    <div>
+      <p class="eyebrow">YOUR SHARING ROOM</p>
+      <h1>Room <span class="room-id">{{ room_id }}</span></h1>
+      <p>Share files with another device using any of the options below.</p>
+    </div>
+    <div class="qr">
+      <img src="{{ url_for('static', filename=qr_filename) }}" alt="QR code to open this QuickDrop room">
+      <small>Scan with your phone camera</small>
+    </div>
+  </section>
+
+  <section class="card share-panel">
+    <h2>Share this room</h2>
+    <div class="share-option">
+      <div><b>1. Share the link</b><p>Open this room directly on another device.</p></div>
+      <div class="share-control"><input id="share-link" value="{{ share_url }}" readonly aria-label="Room sharing link"><button type="button" onclick="copyText('share-link', this)">Copy link</button><button class="secondary" type="button" onclick="shareRoom()">Share…</button></div>
+    </div>
+    <div class="share-option">
+      <div><b>2. Share the Room ID</b><p>Enter this ID on the QuickDrop homepage to join.</p></div>
+      <div class="share-control id-control"><strong id="room-id-value">{{ room_id }}</strong><button type="button" onclick="copyText('room-id-value', this, true)">Copy ID</button></div>
+    </div>
+    <div class="share-option qr-instructions">
+      <div><b>3. Scan the QR code</b><p>Scan the code above with the other device's camera to open this room.</p></div>
+    </div>
+    <p class="share-feedback" id="share-feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Upload files</h2>
+      <div id="dropzone"><b>📁 Drop files here</b><span>or</span><button onclick="picker.click()" type="button">Choose files</button><input id="picker" type="file" multiple hidden></div>
+      <div id="prog" class="hidden"><div class="progress"><i id="bar"></i></div><span id="pt"></span></div>
+    </div>
+    <div class="card">
+      <h2>Files in this room</h2>
+      <div id="files"></div>
+    </div>
+  </section>
+  <footer>⚡ QuickDrop • Files are automatically removed after room expiry</footer>
+</main>
+<script>const ROOM={{ room_id|tojson }};const SHARE_URL={{ share_url|tojson }};</script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
